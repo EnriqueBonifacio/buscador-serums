@@ -136,10 +136,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Mostrar la imagen del QR (Asegúrate de tener la imagen 'image_2c6c57.jpg' en la misma carpeta)
+# Mostrar la imagen del QR (Asegúrate de tener la imagen 'image_2c6c57.jpeg' en la misma carpeta)
 try:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.image("image_2c6c57.jpg", caption="¡Escanea para apoyar!", use_column_width=True)
+        st.image("image_2c6c57.jpeg", caption="¡Escanea para apoyar!", use_column_width=True)
 except FileNotFoundError:
-    st.warning("Coloca tu imagen 'image_2c6c57.jpg' en la misma carpeta para que aparezca el QR.")
+    st.warning("Coloca tu imagen 'image_2c6c57.jpeg' en la misma carpeta para que aparezca el QR.")
