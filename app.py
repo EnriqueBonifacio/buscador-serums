@@ -9,71 +9,81 @@ st.set_page_config(
     page_icon="🏥"
 )
 
-# 2. Estilos CSS: Colores calmantes y corrección de legibilidad (texto oscuro)
+# 2. Estilos CSS: Colores con alto contraste y tonos oscuros para títulos
 st.markdown("""
     <style>
-        /* Fondo general calmante (Alice Blue) */
+        /* Fondo general calmante */
         .stApp {
-            background-color: #F0F8FF; 
+            background-color: #F8FAFC; 
         }
+        
+        /* Título Principal y Subtítulos (Azul Oscuro para visibilidad) */
+        h1, h2, h3 {
+            color: #0F172A !important; /* Azul Marino muy oscuro */
+            font-weight: 800 !important;
+        }
+
         /* Estilo de las tarjetas de resultados */
         .tarjeta-establecimiento {
             background-color: #FFFFFF;
             padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
-            border-left: 8px solid #8FBC8F; /* Verde suave */
-            color: #333333 !important; /* Fuerza el texto a gris oscuro para legibilidad */
+            border-left: 8px solid #1E293B; /* Borde oscuro para contraste */
+            color: #1E293B !important;
         }
-        /* Asegurar que todos los textos dentro de la tarjeta sean oscuros */
-        .tarjeta-establecimiento p, .tarjeta-establecimiento strong, .tarjeta-establecimiento div {
-            color: #333333 !important;
+
+        /* Asegurar que todos los textos sean oscuros */
+        .tarjeta-establecimiento p, .tarjeta-establecimiento strong {
+            color: #334155 !important;
         }
+
         .titulo-centro {
-            color: #2F4F4F; /* Gris azulado oscuro */
+            color: #0F172A; 
             font-size: 22px;
             font-weight: bold;
             margin-bottom: 12px;
         }
+
         .badge {
-            background-color: #E6E6FA; /* Lavanda */
-            padding: 5px 10px;
+            background-color: #F1F5F9; 
+            padding: 6px 12px;
             border-radius: 6px;
             font-size: 13px;
-            font-weight: bold;
-            color: #483D8B !important;
+            font-weight: 700;
+            color: #0F172A !important;
             margin-right: 8px;
+            border: 1px solid #CBD5E1;
             display: inline-block;
             margin-top: 5px;
         }
-        /* Sección de Apoyo llamativa y colorida */
+
+        /* Sección de Apoyo / Yape */
         .seccion-yape {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            padding: 35px;
+            background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+            padding: 40px;
             border-radius: 20px;
             text-align: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            color: white !important;
             margin-top: 50px;
-            border: 2px solid #FFFFFF;
         }
         .yape-text {
-            font-size: 28px;
-            font-weight: bold;
-            color: #7A288A; /* Color morado Yape */
+            font-size: 30px;
+            font-weight: 800;
             margin-bottom: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
 
+# Título con color forzado por CSS
 st.title("🏥 Buscador de Plazas SERUMS 2026-I")
-st.markdown("Busca y filtra las plazas disponibles de forma sencilla. Los datos incluyen coordenadas exactas para Google Maps.")
+st.markdown("Busca y filtra las plazas disponibles con total claridad. Los datos incluyen coordenadas exactas.")
 
-# 3. Función para cargar datos desde el Excel
+# 3. Función para cargar datos
 @st.cache_data
 def cargar_datos():
     try:
-        # Asegúrate de que este nombre coincida con tu archivo en GitHub
         df = pd.read_excel('Plazas_Ofertadas_con_Mapas.xlsx')
         return df.fillna("NO ESPECIFICA")
     except Exception as e:
@@ -83,32 +93,25 @@ def cargar_datos():
 df = cargar_datos()
 
 if not df.empty:
-    # 4. Barra lateral con filtros mejorados
+    # 4. Filtros en la barra lateral
     st.sidebar.header("🔍 Filtros de Búsqueda")
 
     profesion = st.sidebar.selectbox("1. Profesión", options=["Todos"] + sorted(list(df['PROFESIÓN'].unique())))
     institucion = st.sidebar.selectbox("2. Institución", options=["Todos"] + sorted(list(df['INSTITUCIÓN'].unique())))
     departamento = st.sidebar.selectbox("3. Departamento", options=["Todos"] + sorted(list(df['DEPARTAMENTO'].unique())))
 
-    # Filtros dependientes para Provincia y Distrito
-    if departamento != "Todos":
-        prov_opts = sorted(list(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique()))
-    else:
-        prov_opts = sorted(list(df['PROVINCIA'].unique()))
+    # Filtros dependientes
+    prov_opts = sorted(list(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique())) if departamento != "Todos" else sorted(list(df['PROVINCIA'].unique()))
     provincia = st.sidebar.selectbox("4. Provincia", options=["Todos"] + prov_opts)
 
-    if provincia != "Todos":
-        dist_opts = sorted(list(df[df['PROVINCIA'] == provincia]['DISTRITO'].unique()))
-    else:
-        dist_opts = sorted(list(df['DISTRITO'].unique()))
+    dist_opts = sorted(list(df[df['PROVINCIA'] == provincia]['DISTRITO'].unique())) if provincia != "Todos" else sorted(list(df['DISTRITO'].unique()))
     distrito = st.sidebar.selectbox("5. Distrito", options=["Todos"] + dist_opts)
 
-    # Filtros adicionales
     categoria = st.sidebar.selectbox("6. Categoría", options=["Todos"] + sorted(list(df['CATEGORÍA'].unique())))
     zaf = st.sidebar.selectbox("7. Bono ZAF", options=["Todos", "SI", "NO"])
     ze = st.sidebar.selectbox("8. Bono ZE", options=["Todos", "SI", "NO"])
 
-    # 5. Lógica de Filtrado
+    # 5. Filtrado
     df_filtrado = df.copy()
     if profesion != "Todos": df_filtrado = df_filtrado[df_filtrado['PROFESIÓN'] == profesion]
     if institucion != "Todos": df_filtrado = df_filtrado[df_filtrado['INSTITUCIÓN'] == institucion]
@@ -121,7 +124,7 @@ if not df.empty:
 
     st.subheader(f"📍 {len(df_filtrado)} plazas encontradas")
 
-    # 6. Mostrar resultados en tarjetas legibles
+    # 6. Resultados
     for index, row in df_filtrado.iterrows():
         n_plazas = row.get('N° PLAZAS', 1)
         
@@ -136,28 +139,27 @@ if not df.empty:
                 <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
             </div>
             <br>
-            <a href="{row['Link Google Maps']}" target="_blank" style="background-color:#4682B4; color:white; padding:10px 20px; text-decoration:none; border-radius:8px; font-weight:bold; display:inline-block; margin-top:10px;">
+            <a href="{row['Link Google Maps']}" target="_blank" style="background-color:#0F172A; color:white; padding:12px 24px; text-decoration:none; border-radius:8px; font-weight:bold; display:inline-block; margin-top:10px;">
                 🗺️ Ver ubicación exacta
             </a>
         </div>
         """
         st.markdown(html_card, unsafe_allow_html=True)
 
-    # 7. Sección de Apoyo / Yape
+    # 7. Apoyo / Yape
     st.markdown("""
         <div class="seccion-yape">
-            <p class="yape-text">💜 ¿Te sirvió la herramienta?</p>
-            <p style="font-size: 18px; color: #444;">Puedes apoyar este proyecto escaneando el QR de Yape para seguir mejorando la plataforma.</p>
+            <div class="yape-text">💜 ¿Te sirvió la herramienta?</div>
+            <p style="font-size: 18px;">Tu apoyo nos ayuda a mantener esta base de datos actualizada para todos.</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # Mostrar QR con manejo de errores y nombre de archivo corregido
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         qr_path = "image_2c6c57.jpeg"
         if os.path.exists(qr_path):
-            st.image(qr_path, caption="¡Muchas gracias por tu apoyo!", use_container_width=True)
+            st.image(qr_path, caption="¡Escanea para apoyar!", use_container_width=True)
         else:
-            st.info("Sube tu imagen 'image_2c6c57.jpeg' a GitHub para visualizar el QR de apoyo.")
+            st.info("Imagen del QR no detectada. Verifica el nombre en GitHub.")
 else:
-    st.warning("No se encontró información. Verifica que el archivo Excel esté en el repositorio.")
+    st.warning("No se pudo cargar la base de datos.")
