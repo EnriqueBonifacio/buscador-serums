@@ -114,7 +114,7 @@ if not df.empty:
         distritos = sorted(df['DISTRITO'].unique().tolist())
     distrito = st.sidebar.selectbox("5. Distrito", options=["Todos"] + distritos)
 
-    # NUEVO FILTRO: Grado de Dificultad
+    # Filtro: Grado de Dificultad
     dificultad_opciones = sorted(df['GRADO DE DIFICULTAD'].unique().tolist()) if 'GRADO DE DIFICULTAD' in df.columns else []
     dificultad = st.sidebar.selectbox("6. Grado de Dificultad", options=["Todos"] + dificultad_opciones)
 
@@ -164,7 +164,7 @@ if not df.empty:
             <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Cat: {row['CATEGORÍA']}</p>
             <div>
                 <span class="badge">👥 Plazas: {row.get('N° PLAZAS', 1)}</span>
-                <span class="badge">📊 : {val_dificultad}</span>
+                <span class="badge">📊 Dificultad: {val_dificultad}</span>
                 <span class="badge">💰 ZAF: {row['ZAF (*)']}</span>
                 <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
             </div>
