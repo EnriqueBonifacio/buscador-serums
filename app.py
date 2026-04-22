@@ -164,7 +164,7 @@ if not df.empty:
             <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Cat: {row['CATEGORÍA']}</p>
             <div>
                 <span class="badge">👥 Plazas: {row.get('N° PLAZAS', 1)}</span>
-                <span class="badge">📊 Dificultad: {val_dificultad}</span>
+                <span class="badge">📊 : {val_dificultad}</span>
                 <span class="badge">💰 ZAF: {row['ZAF (*)']}</span>
                 <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
             </div>
