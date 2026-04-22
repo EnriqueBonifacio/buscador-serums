@@ -43,6 +43,7 @@ st.markdown("""
             border: 1px solid #CBD5E1;
             display: inline-block;
             margin-right: 5px;
+            margin-top: 5px;
         }
 
         /* Sidebar Yape - Muy visible */
@@ -55,6 +56,19 @@ st.markdown("""
             margin-bottom: 10px;
         }
         
+        /* Bottom Yape - Llamativo */
+        .bottom-yape {
+            background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            color: white !important;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .bottom-yape h2 { color: white !important; margin-bottom: 10px; }
+
         .stButton>button {
             width: 100%;
             background-color: #0F172A;
@@ -67,9 +81,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🏥 Buscador de Plazas SERUMS 2026-I")
-st.markdown("Filtra entre las miles de plazas disponibles. **Puedes escribir dentro de los filtros para buscar más rápido.**")
+st.markdown("Filtra entre las plazas disponibles. **Puedes escribir dentro de los filtros para buscar más rápido.**")
 
-# 3. Carga de datos con Caché para velocidad extrema
+# 3. Carga de datos con Caché
 @st.cache_data
 def cargar_datos_optimizados():
     try:
@@ -81,28 +95,32 @@ def cargar_datos_optimizados():
 df = cargar_datos_optimizados()
 
 if not df.empty:
-    # 4. Sidebar: Filtros interactivos (permiten escribir)
+    # 4. Sidebar: Filtros interactivos
     st.sidebar.header("🔍 Filtros")
 
-    profesion = st.sidebar.selectbox("Profesión", options=["Todos"] + sorted(df['PROFESIÓN'].unique().tolist()))
-    institucion = st.sidebar.selectbox("Institución", options=["Todos"] + sorted(df['INSTITUCIÓN'].unique().tolist()))
-    departamento = st.sidebar.selectbox("Departamento", options=["Todos"] + sorted(df['DEPARTAMENTO'].unique().tolist()))
+    profesion = st.sidebar.selectbox("1. Profesión", options=["Todos"] + sorted(df['PROFESIÓN'].unique().tolist()))
+    institucion = st.sidebar.selectbox("2. Institución", options=["Todos"] + sorted(df['INSTITUCIÓN'].unique().tolist()))
+    departamento = st.sidebar.selectbox("3. Departamento", options=["Todos"] + sorted(df['DEPARTAMENTO'].unique().tolist()))
 
     if departamento != "Todos":
         provincias = sorted(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique().tolist())
     else:
         provincias = sorted(df['PROVINCIA'].unique().tolist())
-    provincia = st.sidebar.selectbox("Provincia", options=["Todos"] + provincias)
+    provincia = st.sidebar.selectbox("4. Provincia", options=["Todos"] + provincias)
 
     if provincia != "Todos":
         distritos = sorted(df[df['PROVINCIA'] == provincia]['DISTRITO'].unique().tolist())
     else:
         distritos = sorted(df['DISTRITO'].unique().tolist())
-    distrito = st.sidebar.selectbox("Distrito", options=["Todos"] + distritos)
+    distrito = st.sidebar.selectbox("5. Distrito", options=["Todos"] + distritos)
 
-    categoria = st.sidebar.selectbox("Categoría", options=["Todos"] + sorted(df['CATEGORÍA'].unique().tolist()))
-    zaf = st.sidebar.selectbox("Bono ZAF", options=["Todos", "SI", "NO"])
-    ze = st.sidebar.selectbox("Bono ZE", options=["Todos", "SI", "NO"])
+    # NUEVO FILTRO: Grado de Dificultad
+    dificultad_opciones = sorted(df['GRADO DE DIFICULTAD'].unique().tolist()) if 'GRADO DE DIFICULTAD' in df.columns else []
+    dificultad = st.sidebar.selectbox("6. Grado de Dificultad", options=["Todos"] + dificultad_opciones)
+
+    categoria = st.sidebar.selectbox("7. Categoría", options=["Todos"] + sorted(df['CATEGORÍA'].unique().tolist()))
+    zaf = st.sidebar.selectbox("8. Bono ZAF", options=["Todos", "SI", "NO"])
+    ze = st.sidebar.selectbox("9. Bono ZE", options=["Todos", "SI", "NO"])
 
     # Apoyo Yape en el Sidebar
     st.sidebar.markdown("---")
@@ -111,16 +129,15 @@ if not df.empty:
     qr_path = "image_2c6c57.jpeg"
     if os.path.exists(qr_path):
         st.sidebar.image(qr_path, use_container_width=True)
-    else:
-        st.sidebar.info("Sube 'image_2c6c57.jpeg' a GitHub para ver el QR.")
 
-    # 5. Lógica de Filtrado (Vectorizada para máxima velocidad)
+    # 5. Lógica de Filtrado
     mask = pd.Series([True] * len(df))
     if profesion != "Todos": mask &= (df['PROFESIÓN'] == profesion)
     if institucion != "Todos": mask &= (df['INSTITUCIÓN'] == institucion)
     if departamento != "Todos": mask &= (df['DEPARTAMENTO'] == departamento)
     if provincia != "Todos": mask &= (df['PROVINCIA'] == provincia)
     if distrito != "Todos": mask &= (df['DISTRITO'] == distrito)
+    if dificultad != "Todos": mask &= (df['GRADO DE DIFICULTAD'] == dificultad)
     if categoria != "Todos": mask &= (df['CATEGORÍA'] == categoria)
     if zaf != "Todos": mask &= (df['ZAF (*)'] == zaf)
     if ze != "Todos": mask &= (df['ZE (**)'] == ze)
@@ -129,23 +146,17 @@ if not df.empty:
 
     st.subheader(f"📍 {len(df_filtrado)} plazas encontradas")
 
-    # -------------------------------------------------------------------------
-    # 6. MOTOR DE FLUIDEZ (Paginación)
-    # Detectar si el usuario cambió algún filtro para reiniciar la vista a 50
-    estado_filtros_actual = f"{profesion}{institucion}{departamento}{provincia}{distrito}{categoria}{zaf}{ze}"
+    # 6. Motor de Fluidez (Paginación)
+    estado_filtros_actual = f"{profesion}{institucion}{departamento}{provincia}{distrito}{dificultad}{categoria}{zaf}{ze}"
     
     if 'estado_filtros' not in st.session_state or st.session_state.estado_filtros != estado_filtros_actual:
         st.session_state.estado_filtros = estado_filtros_actual
-        st.session_state.items_mostrar = 50 # Reinicia a 50 resultados
+        st.session_state.items_mostrar = 50 
 
-    # Cortar la base de datos solo a la cantidad que se va a mostrar
     df_display = df_filtrado.head(st.session_state.items_mostrar)
 
-    # Dibujar solo las tarjetas seleccionadas (Súper rápido)
     for _, row in df_display.iterrows():
-        # Obtenemos la dificultad de forma segura
-        dificultad = row.get('GRADO DE DIFICULTAD', 'N/A')
-        
+        val_dificultad = row.get('GRADO DE DIFICULTAD', 'N/A')
         html_card = f"""
         <div class="tarjeta-establecimiento">
             <div class="titulo-centro">🏥 {row['NOMBRE DE ESTABLECIMIENTO']}</div>
@@ -153,7 +164,7 @@ if not df.empty:
             <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Cat: {row['CATEGORÍA']}</p>
             <div>
                 <span class="badge">👥 Plazas: {row.get('N° PLAZAS', 1)}</span>
-                <span class="badge">📊 : {dificultad}</span>
+                <span class="badge">📊 : {val_dificultad}</span>
                 <span class="badge">💰 ZAF: {row['ZAF (*)']}</span>
                 <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
             </div>
@@ -164,13 +175,25 @@ if not df.empty:
         </div>
         """
         st.markdown(html_card, unsafe_allow_html=True)
-        
-    # Botón de "Cargar más" inteligente
+
     if len(df_filtrado) > st.session_state.items_mostrar:
         if st.button(f"Ver más resultados (Mostrando {st.session_state.items_mostrar} de {len(df_filtrado)})"):
             st.session_state.items_mostrar += 50
             st.rerun()
-    # -------------------------------------------------------------------------
+
+    # APOYO YAPE AL FINAL
+    st.markdown("---")
+    st.markdown("""
+        <div class="bottom-yape">
+            <h2>💜 ¿Te sirvió el buscador?</h2>
+            <p style="font-size: 18px;">Si esta herramienta te ahorró estrés, apóyanos escaneando el QR para mantener el proyecto activo.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if os.path.exists(qr_path):
+            st.image(qr_path, caption="¡Muchas gracias!", use_container_width=True)
 
 else:
-    st.warning("No se encontró el archivo de datos. Verifica que Plazas_Ofertadas_con_Mapas.xlsx esté en GitHub.")
+    st.warning("No se encontró el archivo de datos.")
