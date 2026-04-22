@@ -46,7 +46,7 @@ st.markdown("""
             margin-top: 5px;
         }
 
-        /* Sidebar Yape */
+        /* Sidebar Yape - Muy visible */
         .sidebar-yape {
             background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
             padding: 15px;
@@ -56,7 +56,7 @@ st.markdown("""
             margin-bottom: 10px;
         }
         
-        /* Bottom Yape */
+        /* Bottom Yape - Llamativo */
         .bottom-yape {
             background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
             padding: 30px;
@@ -114,7 +114,7 @@ if not df.empty:
         distritos = sorted(df['DISTRITO'].unique().tolist())
     distrito = st.sidebar.selectbox("5. Distrito", options=["Todos"] + distritos)
 
-    # Filtro: Grado de Dificultad
+    # NUEVO FILTRO: Grado de Dificultad
     dificultad_opciones = sorted(df['GRADO DE DIFICULTAD'].unique().tolist()) if 'GRADO DE DIFICULTAD' in df.columns else []
     dificultad = st.sidebar.selectbox("6. Grado de Dificultad", options=["Todos"] + dificultad_opciones)
 
@@ -146,17 +146,14 @@ if not df.empty:
 
     st.subheader(f"📍 {len(df_filtrado)} plazas encontradas")
 
-    # --------------------------------------------------------------------------------
-    # 6. MOTOR DE FLUIDEZ Y MEMORIA (CORREGIDO PARA EVITAR KEYERROR)
+    # 6. Motor de Fluidez (Paginación)
     estado_filtros_actual = f"{profesion}{institucion}{departamento}{provincia}{distrito}{dificultad}{categoria}{zaf}{ze}"
     
-    # Usamos .get() que es 100% seguro y no colapsa si la memoria está vacía
-    if st.session_state.get('estado_filtros') != estado_filtros_actual:
-        st.session_state['estado_filtros'] = estado_filtros_actual
-        st.session_state['items_mostrar'] = 50 
-    # --------------------------------------------------------------------------------
+    if 'estado_filtros' not in st.session_state or st.session_state.estado_filtros != estado_filtros_actual:
+        st.session_state.estado_filtros = estado_filtros_actual
+        st.session_state.items_mostrar = 50 
 
-    df_display = df_filtrado.head(st.session_state['items_mostrar'])
+    df_display = df_filtrado.head(st.session_state.items_mostrar)
 
     for _, row in df_display.iterrows():
         val_dificultad = row.get('GRADO DE DIFICULTAD', 'N/A')
@@ -179,9 +176,9 @@ if not df.empty:
         """
         st.markdown(html_card, unsafe_allow_html=True)
 
-    if len(df_filtrado) > st.session_state['items_mostrar']:
-        if st.button(f"Ver más resultados (Mostrando {st.session_state['items_mostrar']} de {len(df_filtrado)})"):
-            st.session_state['items_mostrar'] += 50
+    if len(df_filtrado) > st.session_state.items_mostrar:
+        if st.button(f"Ver más resultados (Mostrando {st.session_state.items_mostrar} de {len(df_filtrado)})"):
+            st.session_state.items_mostrar += 50
             st.rerun()
 
     # APOYO YAPE AL FINAL
