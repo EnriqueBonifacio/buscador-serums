@@ -46,7 +46,7 @@ st.markdown("""
             margin-top: 5px;
         }
 
-        /* Sidebar Yape - Muy visible */
+        /* Sidebar Yape */
         .sidebar-yape {
             background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
             padding: 15px;
@@ -56,7 +56,7 @@ st.markdown("""
             margin-bottom: 10px;
         }
         
-        /* Bottom Yape - Llamativo */
+        /* Bottom Yape */
         .bottom-yape {
             background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
             padding: 30px;
@@ -146,14 +146,17 @@ if not df.empty:
 
     st.subheader(f"📍 {len(df_filtrado)} plazas encontradas")
 
-    # 6. Motor de Fluidez (Paginación)
+    # --------------------------------------------------------------------------------
+    # 6. MOTOR DE FLUIDEZ Y MEMORIA (CORREGIDO PARA EVITAR KEYERROR)
     estado_filtros_actual = f"{profesion}{institucion}{departamento}{provincia}{distrito}{dificultad}{categoria}{zaf}{ze}"
     
-    if 'estado_filtros' not in st.session_state or st.session_state.estado_filtros != estado_filtros_actual:
-        st.session_state.estado_filtros = estado_filtros_actual
-        st.session_state.items_mostrar = 50 
+    # Usamos .get() que es 100% seguro y no colapsa si la memoria está vacía
+    if st.session_state.get('estado_filtros') != estado_filtros_actual:
+        st.session_state['estado_filtros'] = estado_filtros_actual
+        st.session_state['items_mostrar'] = 50 
+    # --------------------------------------------------------------------------------
 
-    df_display = df_filtrado.head(st.session_state.items_mostrar)
+    df_display = df_filtrado.head(st.session_state['items_mostrar'])
 
     for _, row in df_display.iterrows():
         val_dificultad = row.get('GRADO DE DIFICULTAD', 'N/A')
@@ -176,9 +179,9 @@ if not df.empty:
         """
         st.markdown(html_card, unsafe_allow_html=True)
 
-    if len(df_filtrado) > st.session_state.items_mostrar:
-        if st.button(f"Ver más resultados (Mostrando {st.session_state.items_mostrar} de {len(df_filtrado)})"):
-            st.session_state.items_mostrar += 50
+    if len(df_filtrado) > st.session_state['items_mostrar']:
+        if st.button(f"Ver más resultados (Mostrando {st.session_state['items_mostrar']} de {len(df_filtrado)})"):
+            st.session_state['items_mostrar'] += 50
             st.rerun()
 
     # APOYO YAPE AL FINAL
