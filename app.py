@@ -19,7 +19,7 @@ st.markdown("""
         
         /* Título Principal y Subtítulos (Azul Oscuro para visibilidad) */
         h1, h2, h3 {
-            color: #0F172A !important; /* Azul Marino muy oscuro */
+            color: #0F172A !important; 
             font-weight: 800 !important;
         }
 
@@ -30,7 +30,7 @@ st.markdown("""
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
-            border-left: 8px solid #1E293B; /* Borde oscuro para contraste */
+            border-left: 8px solid #1E293B; 
             color: #1E293B !important;
         }
 
@@ -59,24 +59,30 @@ st.markdown("""
             margin-top: 5px;
         }
 
-        /* Sección de Apoyo / Yape */
-        .seccion-yape {
+        /* Sección de Apoyo Yape en el Sidebar */
+        .sidebar-yape {
             background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
-            padding: 40px;
-            border-radius: 20px;
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
             color: white !important;
-            margin-top: 50px;
-        }
-        .yape-text {
-            font-size: 30px;
-            font-weight: 800;
+            margin-top: 20px;
             margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .sidebar-yape h3 {
+            color: white !important;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        .sidebar-yape p {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 0;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Título con color forzado por CSS
 st.title("🏥 Buscador de Plazas SERUMS 2026-I")
 st.markdown("Busca y filtra las plazas disponibles con total claridad. Los datos incluyen coordenadas exactas.")
 
@@ -100,7 +106,6 @@ if not df.empty:
     institucion = st.sidebar.selectbox("2. Institución", options=["Todos"] + sorted(list(df['INSTITUCIÓN'].unique())))
     departamento = st.sidebar.selectbox("3. Departamento", options=["Todos"] + sorted(list(df['DEPARTAMENTO'].unique())))
 
-    # Filtros dependientes
     prov_opts = sorted(list(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique())) if departamento != "Todos" else sorted(list(df['PROVINCIA'].unique()))
     provincia = st.sidebar.selectbox("4. Provincia", options=["Todos"] + prov_opts)
 
@@ -110,6 +115,23 @@ if not df.empty:
     categoria = st.sidebar.selectbox("6. Categoría", options=["Todos"] + sorted(list(df['CATEGORÍA'].unique())))
     zaf = st.sidebar.selectbox("7. Bono ZAF", options=["Todos", "SI", "NO"])
     ze = st.sidebar.selectbox("8. Bono ZE", options=["Todos", "SI", "NO"])
+
+    # --- NUEVA UBICACIÓN DEL QR DE YAPE (SIEMPRE VISIBLE EN EL SIDEBAR) ---
+    st.sidebar.markdown("---") # Línea divisoria visual
+    st.sidebar.markdown("""
+        <div class="sidebar-yape">
+            <h3>💜 ¡Apoya el proyecto!</h3>
+            <p>Si esta herramienta te ayudó a encontrar tu plaza, invítame un café.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    qr_path = "image_2c6c57.jpeg"
+    if os.path.exists(qr_path):
+        # Muestra la imagen directamente en el sidebar
+        st.sidebar.image(qr_path, use_container_width=True)
+    else:
+        st.sidebar.info("Imagen del QR no detectada. Verifica el nombre en GitHub.")
+    # ----------------------------------------------------------------------
 
     # 5. Filtrado
     df_filtrado = df.copy()
@@ -146,20 +168,5 @@ if not df.empty:
         """
         st.markdown(html_card, unsafe_allow_html=True)
 
-    # 7. Apoyo / Yape
-    st.markdown("""
-        <div class="seccion-yape">
-            <div class="yape-text">💜 ¿Te sirvió la herramienta?</div>
-            <p style="font-size: 18px;">Tu apoyo nos ayuda a mantener esta base de datos actualizada para todos.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        qr_path = "image_2c6c57.jpeg"
-        if os.path.exists(qr_path):
-            st.image(qr_path, caption="¡Escanea para apoyar!", use_container_width=True)
-        else:
-            st.info("Imagen del QR no detectada. Verifica el nombre en GitHub.")
 else:
     st.warning("No se pudo cargar la base de datos.")
