@@ -143,6 +143,9 @@ if not df.empty:
 
     # Dibujar solo las tarjetas seleccionadas (Súper rápido)
     for _, row in df_display.iterrows():
+        # Obtenemos la dificultad de forma segura
+        dificultad = row.get('GRADO DE DIFICULTAD', 'N/A')
+        
         html_card = f"""
         <div class="tarjeta-establecimiento">
             <div class="titulo-centro">🏥 {row['NOMBRE DE ESTABLECIMIENTO']}</div>
@@ -150,6 +153,7 @@ if not df.empty:
             <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Cat: {row['CATEGORÍA']}</p>
             <div>
                 <span class="badge">👥 Plazas: {row.get('N° PLAZAS', 1)}</span>
+                <span class="badge">📊 Dificultad: {dificultad}</span>
                 <span class="badge">💰 ZAF: {row['ZAF (*)']}</span>
                 <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
             </div>
@@ -160,7 +164,7 @@ if not df.empty:
         </div>
         """
         st.markdown(html_card, unsafe_allow_html=True)
-
+        
     # Botón de "Cargar más" inteligente
     if len(df_filtrado) > st.session_state.items_mostrar:
         if st.button(f"Ver más resultados (Mostrando {st.session_state.items_mostrar} de {len(df_filtrado)})"):
