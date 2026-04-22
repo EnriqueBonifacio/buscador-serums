@@ -86,4 +86,78 @@ if not df.empty:
     # 4. Barra lateral con filtros mejorados
     st.sidebar.header("🔍 Filtros de Búsqueda")
 
-    profesion = st.sidebar
+    profesion = st.sidebar.selectbox("1. Profesión", options=["Todos"] + sorted(list(df['PROFESIÓN'].unique())))
+    institucion = st.sidebar.selectbox("2. Institución", options=["Todos"] + sorted(list(df['INSTITUCIÓN'].unique())))
+    departamento = st.sidebar.selectbox("3. Departamento", options=["Todos"] + sorted(list(df['DEPARTAMENTO'].unique())))
+
+    # Filtros dependientes para Provincia y Distrito
+    if departamento != "Todos":
+        prov_opts = sorted(list(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique()))
+    else:
+        prov_opts = sorted(list(df['PROVINCIA'].unique()))
+    provincia = st.sidebar.selectbox("4. Provincia", options=["Todos"] + prov_opts)
+
+    if provincia != "Todos":
+        dist_opts = sorted(list(df[df['PROVINCIA'] == provincia]['DISTRITO'].unique()))
+    else:
+        dist_opts = sorted(list(df['DISTRITO'].unique()))
+    distrito = st.sidebar.selectbox("5. Distrito", options=["Todos"] + dist_opts)
+
+    # Filtros adicionales
+    categoria = st.sidebar.selectbox("6. Categoría", options=["Todos"] + sorted(list(df['CATEGORÍA'].unique())))
+    zaf = st.sidebar.selectbox("7. Bono ZAF", options=["Todos", "SI", "NO"])
+    ze = st.sidebar.selectbox("8. Bono ZE", options=["Todos", "SI", "NO"])
+
+    # 5. Lógica de Filtrado
+    df_filtrado = df.copy()
+    if profesion != "Todos": df_filtrado = df_filtrado[df_filtrado['PROFESIÓN'] == profesion]
+    if institucion != "Todos": df_filtrado = df_filtrado[df_filtrado['INSTITUCIÓN'] == institucion]
+    if departamento != "Todos": df_filtrado = df_filtrado[df_filtrado['DEPARTAMENTO'] == departamento]
+    if provincia != "Todos": df_filtrado = df_filtrado[df_filtrado['PROVINCIA'] == provincia]
+    if distrito != "Todos": df_filtrado = df_filtrado[df_filtrado['DISTRITO'] == distrito]
+    if categoria != "Todos": df_filtrado = df_filtrado[df_filtrado['CATEGORÍA'] == categoria]
+    if zaf != "Todos": df_filtrado = df_filtrado[df_filtrado['ZAF (*)'] == zaf]
+    if ze != "Todos": df_filtrado = df_filtrado[df_filtrado['ZE (**)'] == ze]
+
+    st.subheader(f"📍 {len(df_filtrado)} plazas encontradas")
+
+    # 6. Mostrar resultados en tarjetas legibles
+    for index, row in df_filtrado.iterrows():
+        n_plazas = row.get('N° PLAZAS', 1)
+        
+        html_card = f"""
+        <div class="tarjeta-establecimiento">
+            <div class="titulo-centro">🏥 {row['NOMBRE DE ESTABLECIMIENTO']}</div>
+            <p><strong>Ubicación:</strong> {row['DEPARTAMENTO']} > {row['PROVINCIA']} > {row['DISTRITO']}</p>
+            <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Categoría {row['CATEGORÍA']}</p>
+            <div>
+                <span class="badge">👥 Plazas: {n_plazas}</span>
+                <span class="badge">💰 ZAF: {row['ZAF (*)']}</span>
+                <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
+            </div>
+            <br>
+            <a href="{row['Link Google Maps']}" target="_blank" style="background-color:#4682B4; color:white; padding:10px 20px; text-decoration:none; border-radius:8px; font-weight:bold; display:inline-block; margin-top:10px;">
+                🗺️ Ver ubicación exacta
+            </a>
+        </div>
+        """
+        st.markdown(html_card, unsafe_allow_html=True)
+
+    # 7. Sección de Apoyo / Yape
+    st.markdown("""
+        <div class="seccion-yape">
+            <p class="yape-text">💜 ¿Te sirvió la herramienta?</p>
+            <p style="font-size: 18px; color: #444;">Puedes apoyar este proyecto escaneando el QR de Yape para seguir mejorando la plataforma.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Mostrar QR con manejo de errores y nombre de archivo corregido
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        qr_path = "image_2c6c57.jpeg"
+        if os.path.exists(qr_path):
+            st.image(qr_path, caption="¡Muchas gracias por tu apoyo!", use_container_width=True)
+        else:
+            st.info("Sube tu imagen 'image_2c6c57.jpeg' a GitHub para visualizar el QR de apoyo.")
+else:
+    st.warning("No se encontró información. Verifica que el archivo Excel esté en el repositorio.")
