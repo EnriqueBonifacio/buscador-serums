@@ -2,171 +2,171 @@ import streamlit as st
 import pandas as pd
 import os
 
-# 1. Configuración inicial de la página
+# 1. Configuración de página
 st.set_page_config(
-    page_title="Buscador de Plazas SERUMS 2026-I", 
+    page_title="Buscador SERUMS 2026-I", 
     layout="wide", 
     page_icon="🏥"
 )
 
-# 2. Estilos CSS: Colores con alto contraste y tonos oscuros para títulos
+# 2. Estilos de Alto Contraste y Mejor Legibilidad
 st.markdown("""
     <style>
-        /* Fondo general calmante */
-        .stApp {
-            background-color: #F8FAFC; 
-        }
+        .stApp { background-color: #F8FAFC; }
         
-        /* Título Principal y Subtítulos (Azul Oscuro para visibilidad) */
-        h1, h2, h3 {
-            color: #0F172A !important; 
-            font-weight: 800 !important;
-        }
+        h1, h2, h3 { color: #0F172A !important; font-weight: 800 !important; }
 
-        /* Estilo de las tarjetas de resultados */
         .tarjeta-establecimiento {
             background-color: #FFFFFF;
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            border-left: 8px solid #1E293B; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            border-left: 8px solid #1E293B;
             color: #1E293B !important;
-        }
-
-        /* Asegurar que todos los textos sean oscuros */
-        .tarjeta-establecimiento p, .tarjeta-establecimiento strong {
-            color: #334155 !important;
         }
 
         .titulo-centro {
             color: #0F172A; 
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .badge {
             background-color: #F1F5F9; 
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #0F172A !important;
-            margin-right: 8px;
             border: 1px solid #CBD5E1;
             display: inline-block;
-            margin-top: 5px;
+            margin-right: 5px;
         }
 
-        /* Sección de Apoyo Yape en el Sidebar */
+        /* Sidebar Yape - Muy visible */
         .sidebar-yape {
             background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             text-align: center;
             color: white !important;
-            margin-top: 20px;
             margin-bottom: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .sidebar-yape h3 {
-            color: white !important;
-            margin-top: 0;
-            font-size: 1.2rem;
-        }
-        .sidebar-yape p {
-            font-size: 14px;
-            line-height: 1.4;
-            margin-bottom: 0;
+        
+        .stButton>button {
+            width: 100%;
+            background-color: #0F172A;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🏥 Buscador de Plazas SERUMS 2026-I")
-st.markdown("Busca y filtra las plazas disponibles con total claridad. Los datos incluyen coordenadas exactas.")
+st.markdown("Filtra entre las miles de plazas disponibles. **Puedes escribir dentro de los filtros para buscar más rápido.**")
 
-# 3. Función para cargar datos
+# 3. Carga de datos con Caché para velocidad extrema
 @st.cache_data
-def cargar_datos():
+def cargar_datos_optimizados():
     try:
         df = pd.read_excel('Plazas_Ofertadas_con_Mapas.xlsx')
         return df.fillna("NO ESPECIFICA")
-    except Exception as e:
-        st.error(f"Error al cargar el archivo Excel: {e}")
+    except:
         return pd.DataFrame()
 
-df = cargar_datos()
+df = cargar_datos_optimizados()
 
 if not df.empty:
-    # 4. Filtros en la barra lateral
-    st.sidebar.header("🔍 Filtros de Búsqueda")
+    # 4. Sidebar: Filtros interactivos (permiten escribir)
+    st.sidebar.header("🔍 Filtros")
 
-    profesion = st.sidebar.selectbox("1. Profesión", options=["Todos"] + sorted(list(df['PROFESIÓN'].unique())))
-    institucion = st.sidebar.selectbox("2. Institución", options=["Todos"] + sorted(list(df['INSTITUCIÓN'].unique())))
-    departamento = st.sidebar.selectbox("3. Departamento", options=["Todos"] + sorted(list(df['DEPARTAMENTO'].unique())))
+    profesion = st.sidebar.selectbox("Profesión", options=["Todos"] + sorted(df['PROFESIÓN'].unique().tolist()))
+    institucion = st.sidebar.selectbox("Institución", options=["Todos"] + sorted(df['INSTITUCIÓN'].unique().tolist()))
+    departamento = st.sidebar.selectbox("Departamento", options=["Todos"] + sorted(df['DEPARTAMENTO'].unique().tolist()))
 
-    prov_opts = sorted(list(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique())) if departamento != "Todos" else sorted(list(df['PROVINCIA'].unique()))
-    provincia = st.sidebar.selectbox("4. Provincia", options=["Todos"] + prov_opts)
+    if departamento != "Todos":
+        provincias = sorted(df[df['DEPARTAMENTO'] == departamento]['PROVINCIA'].unique().tolist())
+    else:
+        provincias = sorted(df['PROVINCIA'].unique().tolist())
+    provincia = st.sidebar.selectbox("Provincia", options=["Todos"] + provincias)
 
-    dist_opts = sorted(list(df[df['PROVINCIA'] == provincia]['DISTRITO'].unique())) if provincia != "Todos" else sorted(list(df['DISTRITO'].unique()))
-    distrito = st.sidebar.selectbox("5. Distrito", options=["Todos"] + dist_opts)
+    if provincia != "Todos":
+        distritos = sorted(df[df['PROVINCIA'] == provincia]['DISTRITO'].unique().tolist())
+    else:
+        distritos = sorted(df['DISTRITO'].unique().tolist())
+    distrito = st.sidebar.selectbox("Distrito", options=["Todos"] + distritos)
 
-    categoria = st.sidebar.selectbox("6. Categoría", options=["Todos"] + sorted(list(df['CATEGORÍA'].unique())))
-    zaf = st.sidebar.selectbox("7. Bono ZAF", options=["Todos", "SI", "NO"])
-    ze = st.sidebar.selectbox("8. Bono ZE", options=["Todos", "SI", "NO"])
+    categoria = st.sidebar.selectbox("Categoría", options=["Todos"] + sorted(df['CATEGORÍA'].unique().tolist()))
+    zaf = st.sidebar.selectbox("Bono ZAF", options=["Todos", "SI", "NO"])
+    ze = st.sidebar.selectbox("Bono ZE", options=["Todos", "SI", "NO"])
 
-    # --- NUEVA UBICACIÓN DEL QR DE YAPE (SIEMPRE VISIBLE EN EL SIDEBAR) ---
-    st.sidebar.markdown("---") # Línea divisoria visual
-    st.sidebar.markdown("""
-        <div class="sidebar-yape">
-            <h3>💜 ¡Apoya el proyecto!</h3>
-            <p>Si esta herramienta te ayudó a encontrar tu plaza, invítame un café.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
+    # Apoyo Yape en el Sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.markdown('<div class="sidebar-yape"><h3>💜 ¡Apoya el proyecto!</h3><p>Escanea para seguir mejorando</p></div>', unsafe_allow_html=True)
+    
     qr_path = "image_2c6c57.jpeg"
     if os.path.exists(qr_path):
-        # Muestra la imagen directamente en el sidebar
         st.sidebar.image(qr_path, use_container_width=True)
     else:
-        st.sidebar.info("Imagen del QR no detectada. Verifica el nombre en GitHub.")
-    # ----------------------------------------------------------------------
+        st.sidebar.info("Sube 'image_2c6c57.jpeg' a GitHub para ver el QR.")
 
-    # 5. Filtrado
-    df_filtrado = df.copy()
-    if profesion != "Todos": df_filtrado = df_filtrado[df_filtrado['PROFESIÓN'] == profesion]
-    if institucion != "Todos": df_filtrado = df_filtrado[df_filtrado['INSTITUCIÓN'] == institucion]
-    if departamento != "Todos": df_filtrado = df_filtrado[df_filtrado['DEPARTAMENTO'] == departamento]
-    if provincia != "Todos": df_filtrado = df_filtrado[df_filtrado['PROVINCIA'] == provincia]
-    if distrito != "Todos": df_filtrado = df_filtrado[df_filtrado['DISTRITO'] == distrito]
-    if categoria != "Todos": df_filtrado = df_filtrado[df_filtrado['CATEGORÍA'] == categoria]
-    if zaf != "Todos": df_filtrado = df_filtrado[df_filtrado['ZAF (*)'] == zaf]
-    if ze != "Todos": df_filtrado = df_filtrado[df_filtrado['ZE (**)'] == ze]
+    # 5. Lógica de Filtrado (Vectorizada para máxima velocidad)
+    mask = pd.Series([True] * len(df))
+    if profesion != "Todos": mask &= (df['PROFESIÓN'] == profesion)
+    if institucion != "Todos": mask &= (df['INSTITUCIÓN'] == institucion)
+    if departamento != "Todos": mask &= (df['DEPARTAMENTO'] == departamento)
+    if provincia != "Todos": mask &= (df['PROVINCIA'] == provincia)
+    if distrito != "Todos": mask &= (df['DISTRITO'] == distrito)
+    if categoria != "Todos": mask &= (df['CATEGORÍA'] == categoria)
+    if zaf != "Todos": mask &= (df['ZAF (*)'] == zaf)
+    if ze != "Todos": mask &= (df['ZE (**)'] == ze)
+    
+    df_filtrado = df[mask]
 
     st.subheader(f"📍 {len(df_filtrado)} plazas encontradas")
 
-    # 6. Resultados
-    for index, row in df_filtrado.iterrows():
-        n_plazas = row.get('N° PLAZAS', 1)
-        
+    # -------------------------------------------------------------------------
+    # 6. MOTOR DE FLUIDEZ (Paginación)
+    # Detectar si el usuario cambió algún filtro para reiniciar la vista a 50
+    estado_filtros_actual = f"{profesion}{institucion}{departamento}{provincia}{distrito}{categoria}{zaf}{ze}"
+    
+    if 'estado_filtros' not in st.session_state or st.session_state.estado_filtros != estado_filtros_actual:
+        st.session_state.estado_filtros = estado_filtros_actual
+        st.session_state.items_mostrar = 50 # Reinicia a 50 resultados
+
+    # Cortar la base de datos solo a la cantidad que se va a mostrar
+    df_display = df_filtrado.head(st.session_state.items_mostrar)
+
+    # Dibujar solo las tarjetas seleccionadas (Súper rápido)
+    for _, row in df_display.iterrows():
         html_card = f"""
         <div class="tarjeta-establecimiento">
             <div class="titulo-centro">🏥 {row['NOMBRE DE ESTABLECIMIENTO']}</div>
             <p><strong>Ubicación:</strong> {row['DEPARTAMENTO']} > {row['PROVINCIA']} > {row['DISTRITO']}</p>
-            <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Categoría {row['CATEGORÍA']}</p>
+            <p><strong>Detalles:</strong> {row['INSTITUCIÓN']} | Cat: {row['CATEGORÍA']}</p>
             <div>
-                <span class="badge">👥 Plazas: {n_plazas}</span>
+                <span class="badge">👥 Plazas: {row.get('N° PLAZAS', 1)}</span>
                 <span class="badge">💰 ZAF: {row['ZAF (*)']}</span>
                 <span class="badge">🔥 ZE: {row['ZE (**)']}</span>
             </div>
             <br>
-            <a href="{row['Link Google Maps']}" target="_blank" style="background-color:#0F172A; color:white; padding:12px 24px; text-decoration:none; border-radius:8px; font-weight:bold; display:inline-block; margin-top:10px;">
-                🗺️ Ver ubicación exacta
+            <a href="{row['Link Google Maps']}" target="_blank" style="background-color:#0F172A; color:white; padding:8px 16px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block; margin-top:8px;">
+                🗺️ Ver en Google Maps
             </a>
         </div>
         """
         st.markdown(html_card, unsafe_allow_html=True)
 
+    # Botón de "Cargar más" inteligente
+    if len(df_filtrado) > st.session_state.items_mostrar:
+        if st.button(f"Ver más resultados (Mostrando {st.session_state.items_mostrar} de {len(df_filtrado)})"):
+            st.session_state.items_mostrar += 50
+            st.rerun()
+    # -------------------------------------------------------------------------
+
 else:
-    st.warning("No se pudo cargar la base de datos.")
+    st.warning("No se encontró el archivo de datos. Verifica que Plazas_Ofertadas_con_Mapas.xlsx esté en GitHub.")
